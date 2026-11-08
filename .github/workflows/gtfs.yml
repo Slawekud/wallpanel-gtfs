@@ -1,0 +1,30 @@
+name: Aktualizuj Wierna 01 GTFS
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 4 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: update-gtfs
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Przygotuj rozklad
+        run: python build_gtfs.py
+      - name: Zapisz dane w repozytorium
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/wierna01.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Aktualizacja odjazdow Wierna 01"
+            git push
+          fi
